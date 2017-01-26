@@ -186,6 +186,8 @@ static void job_data(struct pmix_peer_t *pr, pmix_usock_hdr_t *hdr,
         PMIX_ERROR_LOG(rc);
         return;
     }
+    assert(NULL != nspace);
+    free(nspace);
     /* decode it */
 #if !(defined(PMIX_ENABLE_DSTORE) && (PMIX_ENABLE_DSTORE == 1))
         pmix_job_data_htable_store(nspace, buf);
