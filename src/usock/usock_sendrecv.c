@@ -2,7 +2,7 @@
  * Copyright (c) 2014-2016 Intel, Inc.  All rights reserved.
  * Copyright (c) 2014      Artem Y. Polyakov <artpol84@gmail.com>.
  *                         All rights reserved.
- * Copyright (c) 2015-2016 Research Organization for Information Science
+ * Copyright (c) 2015-2017 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * Copyright (c) 2016      Mellanox Technologies, Inc.
  *                         All rights reserved.
@@ -53,6 +53,7 @@ static void lost_connection(pmix_peer_t *peer, pmix_status_t err)
     pmix_server_trkr_t *trk;
     pmix_rank_info_t *rinfo, *rnext;
     pmix_trkr_caddy_t *tcd;
+    pmix_rank_info_t *info, *pinfo;
 
     /* stop all events */
     if (peer->recv_ev_active) {
@@ -99,8 +100,17 @@ static void lost_connection(pmix_peer_t *peer, pmix_status_t err)
                 }
             }
         }
-         /* remove this proc from the list of ranks for this nspace */
-         pmix_list_remove_item(&(peer->info->nptr->server->ranks), &(peer->info->super));
+#if 0
+        /* remove this proc from the list of ranks for this nspace */
+        pmix_list_remove_item(&(peer->info->nptr->server->ranks), &(peer->info->super));
+#else
+        /* remove this proc from the list of ranks for this nspace if it is still there */
+        PMIX_LIST_FOREACH_SAFE(info, pinfo, &(peer->info->nptr->server->ranks), pmix_rank_info_t) {
+            if (info == peer->info) {
+                pmix_list_remove_item(&(peer->info->nptr->server->ranks), &(peer->info->super));
+            }
+        }
+#endif
          PMIX_RELEASE(peer->info);
          /* reduce the number of local procs */
          --peer->info->nptr->server->nlocalprocs;

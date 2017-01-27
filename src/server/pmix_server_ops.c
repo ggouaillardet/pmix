@@ -555,7 +555,6 @@ pmix_status_t pmix_server_fence(pmix_server_caddy_t *cd,
 
     /* add this contributor to the tracker so they get
      * notified when we are done */
-    PMIX_RETAIN(cd);
     pmix_list_append(&trk->local_cbs, &cd->super);
     /* if all local contributions have been received,
      * let the local host's server know that we are at the

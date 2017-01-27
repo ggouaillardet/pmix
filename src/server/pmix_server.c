@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil -*- */
 /*
  * Copyright (c) 2014-2016 Intel, Inc.  All rights reserved.
- * Copyright (c) 2014-2015 Research Organization for Information Science
+ * Copyright (c) 2014-2017 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * Copyright (c) 2014-2015 Artem Y. Polyakov <artpol84@gmail.com>.
  *                         All rights reserved.
@@ -421,6 +421,10 @@ PMIX_EXPORT pmix_status_t PMIx_server_finalize(void)
     cleanup_server_state();
     pmix_output_verbose(2, pmix_globals.debug_output,
                         "pmix:server finalize complete");
+
+    /* finalize the class/object system */
+    pmix_class_finalize();
+
     return PMIX_SUCCESS;
 }
 
@@ -1964,7 +1968,7 @@ static void _mdxcbfunc(int sd, short argc, void *cbdata)
 {
     pmix_shift_caddy_t *scd = (pmix_shift_caddy_t*)cbdata;
     pmix_server_trkr_t *tracker = scd->tracker;
-    pmix_buffer_t xfer, *bptr, *databuf, *bpscope, *reply;
+    pmix_buffer_t xfer, *bptr, *databuf=NULL, *bpscope, *reply;
     pmix_nspace_t *nptr, *ns;
     pmix_server_caddy_t *cd;
     char *nspace;
@@ -2037,6 +2041,7 @@ static void _mdxcbfunc(int sd, short argc, void *cbdata)
                  */
                 pmix_output_verbose(8, pmix_globals.debug_output,
                                     "modex_cbfunc: unknown nspace %s, Fence ", nspace);
+                free(nspace);
                 /*
                  * TODO: if some namespaces are OK and the bad one is not the first
                  * the server is in inconsistent state. Should we rely on the client to abort
@@ -2045,6 +2050,7 @@ static void _mdxcbfunc(int sd, short argc, void *cbdata)
                 rc = PMIX_ERR_INVALID_NAMESPACE;
                 goto finish_collective;
             }
+            free(nspace);
 
             /* unpack the rank */
             cnt = 1;
@@ -2103,6 +2109,9 @@ static void _mdxcbfunc(int sd, short argc, void *cbdata)
     }
 
 finish_collective:
+    if(NULL != databuf) {
+        PMIX_RELEASE(databuf);
+    }
     /* setup the reply, starting with the returned status */
     reply = PMIX_NEW(pmix_buffer_t);
     if (PMIX_SUCCESS != (rc = pmix_bfrop.pack(reply, &rc, 1, PMIX_INT))) {
@@ -2451,6 +2460,8 @@ static pmix_status_t server_switchyard(pmix_peer_t *peer, uint32_t tag,
             if (PMIX_SUCCESS != (rc = pmix_host_server.client_finalized(&proc, peer->info->server_object,
                                                                         op_cbfunc, cd))) {
                 PMIX_RELEASE(cd);
+            } else {
+                return rc;
             }
         }
         /* turn off the recv event - we shouldn't hear anything
