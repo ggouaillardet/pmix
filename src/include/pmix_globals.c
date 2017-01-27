@@ -86,18 +86,21 @@ static void nsdes(pmix_nspace_t *p)
 {
     uint64_t key;
     pmix_object_t *obj;
+    void * _nptr;
+    pmix_status_t rc;
 
     PMIX_LIST_DESTRUCT(&p->nodes);
-    PMIX_HASH_TABLE_FOREACH(key, uint64, obj, &p->internal) {
-        if (NULL != obj) {
-            PMIX_RELEASE(obj);
-        }
+
+    rc = pmix_hash_table_get_first_key_uint64(&p->internal, &key, (void **)&obj, &_nptr);
+    while (PMIX_SUCCESS == rc) {
+        PMIX_RELEASE(obj);
+        rc = pmix_hash_table_get_next_key_uint64(&p->internal, &key, (void **)&obj, _nptr, &_nptr);
     }
     PMIX_DESTRUCT(&p->internal);
-    PMIX_HASH_TABLE_FOREACH(key, uint64, obj, &p->modex) {
-        if (NULL != obj) {
-            PMIX_RELEASE(obj);
-        }
+    rc = pmix_hash_table_get_first_key_uint64(&p->modex, &key, (void **)&obj, &_nptr);
+    while (PMIX_SUCCESS == rc) {
+        PMIX_RELEASE(obj);
+        rc = pmix_hash_table_get_next_key_uint64(&p->modex, &key, (void **)&obj, _nptr, &_nptr);
     }
     PMIX_DESTRUCT(&p->modex);
     if (NULL != p->server) {
@@ -143,16 +146,26 @@ static void sndes(pmix_server_nspace_t *p)
 {
     uint64_t key;
     pmix_peer_t * peer;
+    pmix_status_t rc;
+    void * _nptr;
+
     PMIX_DESTRUCT(&p->job_info);
     PMIX_LIST_DESTRUCT(&p->ranks);
-    PMIX_HASH_TABLE_FOREACH(key, uint64, peer, &p->mylocal) {
+
+    rc = pmix_hash_table_get_first_key_uint64(&p->mylocal, &key, (void **)&peer, &_nptr);
+    while (PMIX_SUCCESS == rc) {
         PMIX_RELEASE(peer);
+        rc = pmix_hash_table_get_next_key_uint64(&p->mylocal, &key, (void **)&peer, _nptr, &_nptr);
     }
     PMIX_DESTRUCT(&p->mylocal);
-    PMIX_HASH_TABLE_FOREACH(key, uint64, peer, &p->myremote) {
+
+    rc = pmix_hash_table_get_first_key_uint64(&p->myremote, &key, (void **)&peer, &_nptr);
+    while (PMIX_SUCCESS == rc) {
         PMIX_RELEASE(peer);
+        rc = pmix_hash_table_get_next_key_uint64(&p->myremote, &key, (void **)&peer, _nptr, &_nptr);
     }
     PMIX_DESTRUCT(&p->myremote);
+
     PMIX_DESTRUCT(&p->remote);
 }
 PMIX_CLASS_INSTANCE(pmix_server_nspace_t,
