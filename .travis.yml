@@ -1,6 +1,10 @@
 sudo: false
 dist: xenial
 
+arch:
+  - amd64
+  - arm64
+
 cache:
   apt: true
 
