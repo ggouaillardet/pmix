@@ -52,6 +52,8 @@ jobs:
 
 script:
         # prepare
+        - env
+        - cat /proc/cpuinfo
         # build
         - ./autogen.pl
         - pip install -q cython
