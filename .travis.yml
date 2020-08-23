@@ -53,9 +53,6 @@ jobs:
 
 script:
         # prepare
-        - env
-        - cat /proc/cpuinfo
-        - grep Cpus_allowed_list /proc/self/status
         # build
         - ./autogen.pl
         - pip install -q cython
