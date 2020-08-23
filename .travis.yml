@@ -61,6 +61,7 @@ script:
         - pip install -q cython
         - ./configure ${ENABLE_WERROR}
         - if [ $? -ne 0 ]; then cat config.log; fi
+        - if [ $TRAVIS_ARCH == "amd64" ]; then export AM_MAKEFLAGS=-j4; make -j 4 all; elif [ $TRAVIS_ARCH == "arm64" ]; then export AM_MAKEFLAGS=-j32; make -j 32 all; elif [ $TRAVIS_ARCH  == "ppc64le" ]; then export AM_MAKEFLAGS=-j16; make -j 16 all; fi
         - make all
         # test
-        - make distcheck
+        - if [ $TRAVIS_ARCH == "amd64" ]; then export AM_MAKEFLAGS=-j4; make -j 4 distcheck; elif [ $TRAVIS_ARCH == "arm64" ]; then export AM_MAKEFLAGS=-j32; make -j 32 distcheck; elif [ $TRAVIS_ARCH  == "ppc64le" ]; then export AM_MAKEFLAGS=-j16; make -j 16 distcheck; fi
